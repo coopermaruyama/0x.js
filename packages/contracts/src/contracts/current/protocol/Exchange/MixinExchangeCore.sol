@@ -76,12 +76,14 @@ contract MixinExchangeCore is
     /// @param signature Proof of signing order by maker.
     /// @return Total amount of takerToken filled in trade.
     function fillOrder(
-          address[5] orderAddresses,
-          uint[6] orderValues,
-          uint takerTokenFillAmount,
-          bytes signature)
-          public
-          returns (uint256 takerTokenFilledAmount)
+        address[5] orderAddresses,
+        uint[6] orderValues,
+        address taker,
+        uint takerTokenFillAmount,
+        bytes makerSignature,
+        bytes takerSignature)
+        public
+        returns (uint256 takerTokenFilledAmount)
     {
         Order memory order = Order({
             maker: orderAddresses[0],
@@ -110,8 +112,15 @@ contract MixinExchangeCore is
         
         // Validate taker
         if (order.taker != address(0)) {
-            require(order.taker == msg.sender);
+            require(taker == order.taker);
+        } else {
+            order.taker = taker;
         }
+        require(isValidSignature(
+            order.orderHash ^ 0x1, // Domain separator maker/taker
+            order.taker,
+            takerSignature
+        ));
         require(takerTokenFillAmount > 0);
 
         // Validate order expiration
