@@ -114,6 +114,7 @@ contract MixinExchangeCore is
         }
         require(takerTokenFillAmount > 0);
 
+        // Validate order expiration
         if (block.timestamp >= order.expirationTimestampInSec) {
             LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
             return 0;
